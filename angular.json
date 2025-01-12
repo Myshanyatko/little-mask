@@ -91,6 +91,39 @@
           }
         }
       }
+    },
+    "ltl-mask": {
+      "projectType": "library",
+      "root": "projects/ltl-mask",
+      "sourceRoot": "projects/ltl-mask/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/ltl-mask/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/ltl-mask/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/ltl-mask/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "projects/ltl-mask/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
     }
   }
 }
