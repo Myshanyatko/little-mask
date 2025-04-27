@@ -10,6 +10,7 @@ import { LtlMaskDirective } from '../../projects/ltl-mask/ltl-mask.directive';
 })
 export class AppComponent {
   title = 'little-mask';
-
+  // mask = '999a{2}?{2}';
+  mask = /[0-9a-zA-Z_.\\-]{2,50}[@]{1}[0-9a-zA-Z_./-]{2,50}[.]{1}[a-zA-Z]{2,5}/
   model = ''
 }

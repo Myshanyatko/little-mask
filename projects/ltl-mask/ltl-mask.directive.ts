@@ -8,16 +8,24 @@ import {
   Input,
   OnInit,
 } from '@angular/core';
-import { filter, Subject } from 'rxjs';
+
+type Rules = {
+  [key: string]: RegExp[][];
+}
 
 @Directive({
   selector: '[mask]',
 })
+
 export class LtlMaskDirective implements OnInit {
-  mask = input.required<string>();
-  regexMask = computed(() => this.maskToRegex(this.mask()));
-  lastIndex: RegExp[] = [];
-  rules: RegExp[][] = [];
+  mask = input.required<string | RegExp | RegExp[]>();
+
+  // 1 левел вложенности - для необязательных символов в маске (например, {n,m})
+  // 2 левел вложенности - маска раскладыввется на массив подрегулярок. Порядок важен, по n-индексу лежит правило для n-ого символа вводимой строки
+  // 3 левел вложенности - для массива масок (избегаем |)
+  rules: Rules = {};
+  
+  maxLength = 0;
 
   @HostListener('beforeinput', ['$event'])
   onBeforeInput(e: InputEvent) {
@@ -29,15 +37,55 @@ export class LtlMaskDirective implements OnInit {
   }
 
   ngOnInit(): void {
-    // this.el.nativeElement.addEventListener('beforeinput', (event: InputEvent) =>
-    //   this.onbeforeinput(event)
-    // );
-    this.govno2();
+    const mm = new Date().getTime();
+    this.createRules();
+    const newMm = new Date().getTime();
+    console.log('время выполнения ' + (newMm - mm));
+    console.log(this.rules);
   }
 
-  // ^\d.{2}
-  govno2() {
-    const mask = this.regexMask().source;
+  // TODO правила по маске-строке
+  stringMaskToRules(mask: string): RegExp[][] {
+    let rules: RegExp[][] = [];
+    let lastIndex = 0;
+    for (var i = 0; i < mask.length; i++) {
+      switch (mask[i]) {
+        case '9':
+          rules[lastIndex] = [/\d/];
+          break;
+        case 'a':
+          rules[lastIndex] = [/[a-zA-Zа-яА-Я]/];
+          break;
+        case '?':
+          rules[lastIndex] = [/./];
+          break;
+        case '{':
+          let count = '';
+          const rule = rules[lastIndex - 1];
+          getSpec: for (let j = i + 1; j < mask.length; j++) {
+            if (mask[j] === '}') {
+              for (let index = 0; index < +count - 1; index++) { 
+                rules[lastIndex + index] = rule;
+              }
+              lastIndex = lastIndex + +count - 1;
+              i = j;
+              break getSpec;
+            }
+            count = count + mask[j];
+          }
+          break;
+        default:
+          break;
+      }
+    lastIndex++;
+    }
+    return [rules];
+  }
+
+  // регулярное выражение в массив правил
+  regexMaskToRules(maskRegex: RegExp): RegExp[][] {
+    const rules: RegExp[][] = [];
+    const mask = maskRegex.source;
     let lastIndex = 0;
 
     lineTraversal: for (let index = 0; index < mask.length; index++) {
@@ -58,22 +106,24 @@ export class LtlMaskDirective implements OnInit {
             }
           }
           break;
+        // TODO переделать в рекурсию, чтобы корректно обрабатывать {n, m}
         case '{':
           let count = '';
           let requiredCount: number = lastIndex;
-          const rule =
-            this.rules[lastIndex - 1][this.rules[lastIndex - 1].length - 1];
+          let hasNoRequiredPart = false;
+          const rule = rules[lastIndex - 1][rules[lastIndex - 1].length - 1];
           getSpec: for (let j = index + 1; j < mask.length; j++) {
             if (mask[j] === ',') {
               requiredCount = +count;
               count = '';
+              hasNoRequiredPart = true;
               continue getSpec;
             }
             if (mask[j] === '}') {
               for (let i = 0; i < +count - 1; i++) {
-                this.setRule(lastIndex + i, rule);
+                this.setRule(lastIndex + i, rule, rules);
               }
-              lastIndex += requiredCount;
+              lastIndex = hasNoRequiredPart ? lastIndex + requiredCount : lastIndex + +count - 1;
               index = j;
               break getSpec;
             }
@@ -89,19 +139,37 @@ export class LtlMaskDirective implements OnInit {
           regular = mask[index];
       }
       if (regular) {
-        this.setRule(lastIndex, new RegExp(regular));
+        this.setRule(lastIndex, new RegExp(regular), rules);
         lastIndex++;
       }
     }
+
+    return rules;
   }
 
-  setRule(index: number, value: RegExp) {
-    const rule = this.rules[index];
-    if (!rule) this.rules[index] = [value];
-    else this.rules[index].push(value);
+  createRules() {
+    // если маска строка
+    if (typeof this.mask() === 'string') {
+      this.rules[0] = this.stringMaskToRules(this.mask() as string);
+      return;
+    }
+    // если маска - массив масок
+    if (Array.isArray(this.mask())) {
+      (this.mask() as RegExp[]).forEach((mask, index) =>
+        this.rules[index] = this.regexMaskToRules(mask)
+      );
+      return;
+    }
+    // если маска RegExp
+    this.rules[0] = this.regexMaskToRules(this.mask() as RegExp);
   }
 
-  readRuleAsOneSymbol(mask: string) {}
+  setRule(index: number, value: RegExp, rules: RegExp[][]) {
+    const rule = rules[index];
+    if (!rule) rules[index] = [value];
+    else rules[index].push(value);
+  }
+
 
   getStringBeforeMask(e: InputEvent): string {
     const currentText = (<HTMLInputElement>e.currentTarget)?.value || '';
@@ -117,53 +185,43 @@ export class LtlMaskDirective implements OnInit {
     return `${startStr}${writeStr}${endStr}`;
   }
 
-  maskToRegex(mask: string): RegExp {
-    let newRegex = mask;
-    // for (var i = 0; i < mask.length; i++) {
-    //   switch (mask[i]) {
-    //     case '9':
-    //       newRegex += '\\d';
-    //       break;
-    //     case 'a':
-    //       newRegex += '[a-zA-Zа-яА-Я]';
-    //       break;
-    //     case '?':
-    //       newRegex += '\\.';
-    //       break;
-    //     case '{':
-    //       const nextSymbol = mask[i+1];
-    //       newRegex += `{${nextSymbol}}`;
-    //       break;
-    //     default:
-    //       break;
-    //   }
-    // }
-    // TODO не заменять, не оптимально
-    newRegex = newRegex.replaceAll('9', '\\d');
-    newRegex = newRegex.replaceAll('a', '[a-zA-Zа-яА-Я]');
-    newRegex = newRegex.replaceAll('?', '.');
-    newRegex = newRegex.replaceAll('{', '{1,');
-    // newRegex += '$';
-    // newRegex = '^' + newRegex;
-    return new RegExp(newRegex);
-  }
+  // maskToRegex(mask: string): RegExp {
+  //   let newRegex = mask;
+
+  //   // TODO не заменять, не оптимально
+  //   newRegex = newRegex.replaceAll('9', '\\d');
+  //   newRegex = newRegex.replaceAll('a', '[a-zA-Zа-яА-Я]');
+  //   newRegex = newRegex.replaceAll('?', '.');
+  //   newRegex = newRegex.replaceAll('{', '{1,');
+  //   // newRegex += '$';
+  //   // newRegex = '^' + newRegex;
+  //   return new RegExp(newRegex);
+  // }
 
   inputEventHandling(e: InputEvent) {
-    let nextValue = '';
+    // let nextValue = '';
     switch (e.inputType) {
       case 'insertText':
-        nextValue = this.getStringBeforeMask(e);
+        // nextValue = this.getStringBeforeMask(e);
 
-        console.log(nextValue);
+        // console.log(nextValue);
         // if (nextValue.match(this.regexMask())) return;
         // if (this.regexMask().test(nextValue)) return;
-        const selectionStart = (<HTMLInputElement>e.currentTarget)
-          .selectionStart;
-        for (const reg of this.rules[selectionStart || 0]) {
-          if (reg.test(e.data as string)) break;
-          e.stopPropagation();
-          e.preventDefault();
+        const selectionStart =
+          (<HTMLInputElement>e.currentTarget).selectionStart || 0;
+        if (selectionStart < Math.max(Object.values(this.rules).map(elem => elem.length))) {
+          
+          loopCheck: for (const rules of this.rules) {
+            if (!rules?.[selectionStart]) {
+              continue loopCheck;
+            }
+            for (const reg of rules?.[selectionStart]) {
+              if (reg.test(e.data as string)) return;
+            }
+          }
         }
+        e.stopPropagation();
+        e.preventDefault();
         return;
       default:
         return;
