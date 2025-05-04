@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { LtlMaskDirective } from '../../projects/ltl-mask/ltl-mask.directive';
+import { LtlMaskDirective } from '../../projects/ltl-mask/src/lib/ltl-mask.directive';
 
 @Component({
   selector: 'app-root',
