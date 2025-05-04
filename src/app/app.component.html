@@ -1,5 +1,6 @@
 <div class="input">
-  <input [(ngModel)]="model" [mask]="'9{3}a{2}??'"/>
+  <input [(ngModel)]="model" [mask]="mask"/>  
 
   <div style="margin-top: 20px">{{ model }}</div>
+  <div style="margin-top: 20px">{{ model.length }}</div>
 </div>
