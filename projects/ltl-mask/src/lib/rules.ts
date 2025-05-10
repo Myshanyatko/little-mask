@@ -7,18 +7,19 @@ export type IRules = {
 };
 
 export class Rules implements IRules {
-  rules: RegExp[][];
-  maxLengthMask: number;
+  rules!: RegExp[][];
+  maxLengthMask!: number;
   usedMaskIndex: number = 0;
 
   constructor(mask: string | RegExp | RegExp[] | string[]) {
+    if (!mask) return;
     this.rules = this.rulesFromMask(mask);
     this.maxLengthMask = Math.max(...this.rules.map((arr) => arr.length));
   }
 
   /**
    * Возвращает правила из маски
-   * @param mask - начально переданная маска
+   * @param mask - изначально переданная маска
    * @returns Набор правил
    */
   rulesFromMask(mask: string | RegExp | RegExp[] | string[]): RegExp[][] {
@@ -32,13 +33,14 @@ export class Rules implements IRules {
     return this.maskToRules(mask as RegExp);
   }
   /**
-   * Самый важный метод! Перделывает regex в rules
+   * Самый важный метод! Переделывает regex в rules
    * @param maskRegex - маска
    * @returns правила
    */
   maskToRules(initialMask: RegExp | string): RegExp[][] {
     let rules: RegExp[][] = [[]];
     const isString = typeof initialMask === 'string';
+    
     const mask = isString ? initialMask : initialMask.source;
     // номер символа, для которого определяем правило
     let regular: string = '';
