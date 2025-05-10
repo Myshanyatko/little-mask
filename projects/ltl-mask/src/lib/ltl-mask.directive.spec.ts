@@ -1,4 +1,4 @@
-import { Rules } from './rules';
+import { LittleMask } from './rules';
 
 describe('LtlMaskDirective', () => {
   it('should make rules from mask', () => {
@@ -99,6 +99,6 @@ const testCreateRules = (
   mask: string | RegExp | RegExp[] | string[],
   result: RegExp[][]
 ) => {
-  const rules = new Rules(mask);
+  const rules = new LittleMask(mask);
   expect(rules.rules.sort()).toEqual(result.sort());
 };

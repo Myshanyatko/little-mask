@@ -1,4 +1,4 @@
-import { Aliases, AliasesDict } from './aliases';
+import { AliasesDict } from './aliases';
 
 export type ILittleMask = {
   rules: RegExp[][];
@@ -22,7 +22,7 @@ export class LittleMask implements ILittleMask {
    * @param mask - изначально переданная маска
    * @returns Набор правил
    */
-  rulesFromMask(mask: string | RegExp | RegExp[] | string[]): RegExp[][] {
+  private rulesFromMask(mask: string | RegExp | RegExp[] | string[]): RegExp[][] {
     // если маска - массив масок
     if (Array.isArray(mask)) {
       const rules: RegExp[][] = [];
@@ -37,7 +37,7 @@ export class LittleMask implements ILittleMask {
    * @param maskRegex - маска
    * @returns правила
    */
-  maskToRules(initialMask: RegExp | string): RegExp[][] {
+  private maskToRules(initialMask: RegExp | string): RegExp[][] {
     let rules: RegExp[][] = [[]];
     const isString = typeof initialMask === 'string';
     
@@ -94,7 +94,7 @@ export class LittleMask implements ILittleMask {
    * @param mask - символ маскт
    * @returns строка с соответствующим регулряным выражением
    */
-  regularFromAlias(mask: string): string {
+  private regularFromAlias(mask: string): string {
     return AliasesDict[mask] || mask;
   }
 
@@ -106,7 +106,7 @@ export class LittleMask implements ILittleMask {
    * @param regular - регулярка
    * @returns [новые правила, индекс, на котором закончалось выражение (равно "}")]
    */
-  regularFromBraces(
+  private regularFromBraces(
     index: number,
     mask: string,
     rules: RegExp[][],
@@ -161,7 +161,7 @@ export class LittleMask implements ILittleMask {
    * @param mask - маска
    * @returns [значение для regular, индекс, на котором закончалось выражение (равно "]")]
    */
-  regularFromSquareBrackets(index: number, mask: string): [string, number] {
+  private regularFromSquareBrackets(index: number, mask: string): [string, number] {
     let regular = '[';
     let lastSymbolIndex = index;
     // пускаем цикл дальше по маске, начиная с символа после [
@@ -185,7 +185,7 @@ export class LittleMask implements ILittleMask {
    * @param count
    * @param requiredCount
    */
-  copyRulesWithNoRequiredSymbol(
+  private copyRulesWithNoRequiredSymbol(
     rules: RegExp[][],
     regular: string,
     count: string,
@@ -212,7 +212,7 @@ export class LittleMask implements ILittleMask {
    * @param value что нужно записать
    * @param rules куда надо записать
    */
-  setRule(value: RegExp, rules: RegExp[][]) {
+  private setRule(value: RegExp, rules: RegExp[][]) {
     rules.forEach((rule) => {
       rule.push(value);
     });

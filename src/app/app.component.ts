@@ -11,6 +11,7 @@ import { LtlMaskDirective } from '../../projects/ltl-mask/src/lib/ltl-mask.direc
 export class AppComponent {
   title = 'little-mask';
   private _cdr = inject(ChangeDetectorRef);
+  control = new FormControl('', [Validators.required]);
   // mask = '999a{2}?{2}';
   // mask = /[0-9]{2,50}@{1}[a-zA-Z]{2,50}\.{1}[u]{2,5}/
   // mask = /[0-9a-zA-Z_.\\-]{2,50}@{1}[0-9a-zA-Z_./-]{2,50}\.{1}[a-zA-Z]{2,5}/
@@ -20,8 +21,8 @@ export class AppComponent {
   // mask = /\w{250}/
   // mask = ['00', 'aaa', '???']
   mask = '00/00/0000';
-  control = new FormControl('', [Validators.required]);
   // mask = ['00', 'aa0']
+
   model = '';
   setModel() {
     this.model = '24/24/1000s';
