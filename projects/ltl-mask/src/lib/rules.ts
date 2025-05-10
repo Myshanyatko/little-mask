@@ -1,14 +1,14 @@
 import { Aliases, AliasesDict } from './aliases';
 
-export type IRules = {
+export type ILittleMask = {
   rules: RegExp[][];
   maxLengthMask: number;
   usedMaskIndex: number;
 };
 
-export class Rules implements IRules {
-  rules!: RegExp[][];
-  maxLengthMask!: number;
+export class LittleMask implements ILittleMask {
+  rules: RegExp[][] = [];
+  maxLengthMask: number = 0;
   usedMaskIndex: number = 0;
 
   constructor(mask: string | RegExp | RegExp[] | string[]) {

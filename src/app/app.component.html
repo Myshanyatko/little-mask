@@ -1,7 +1,19 @@
-<div class="input">
-  <input [(ngModel)]="model" [mask]="mask"/>  
+<div class="grid">
+  <div class="input">
+    <div class="label">С ngModel</div>
+    <input [(ngModel)]="model" [mask]="mask" />
 
-  <div style="margin-top: 20px">{{ model }}</div>
-  <div style="margin-top: 20px">{{ model.length }}</div>
-  <button (click)="setModel()">назначить модель</button>
+    <div style="margin-top: 20px">{{ model }}</div>
+    <div style="margin-top: 20px">{{ model.length }}</div>
+    <button (click)="setModel()">назначить модель</button>
+  </div>
+  <div class="input">
+    <div class="label">С FormControl</div>
+    <input [formControl]="control" [mask]="mask" />
+    <div style="margin-top: 20px">{{ control.value }}</div>
+    <div style="margin-top: 20px">{{ control.value?.length }}</div>
+    <div style="margin-top: 20px">valid: {{ control.valid }}</div>
+    <div style="margin-top: 20px">dirty: {{ control.dirty }}</div>
+    <button (click)="setControl()">назначить модель</button>
+  </div>
 </div>

@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LtlMaskDirective } from '../../projects/ltl-mask/src/lib/ltl-mask.directive';
 
 @Component({
@@ -20,9 +20,15 @@ export class AppComponent {
   // mask = /\w{250}/
   // mask = ['00', 'aaa', '???']
   mask = '00/00/0000';
+  control = new FormControl('', [Validators.required]);
+  // mask = ['00', 'aa0']
   model = '';
   setModel() {
     this.model = '24/24/1000s';
     this._cdr.detectChanges();
+  }
+
+  setControl() {
+    this.control.setValue('24/24/1000s')
   }
 }
