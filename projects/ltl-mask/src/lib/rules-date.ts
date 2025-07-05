@@ -1,58 +1,133 @@
 import { AliasesDict } from './aliases';
+import { ILittleMaskSeparately, TLtlPlainMask } from './ltl-mask.interface';
+import { ILittleMask } from './rules';
 
-export type ILittleMask = {
-  rules: RegExp[][];
-  maxLengthMask: number;
-  usedMaskIndex?: number;
-};
 
-export class LittleMask implements ILittleMask {
-  rules: RegExp[][] = [];
-  maxLengthMask: number = 0;
-  usedMaskIndex: number = 0;
 
-  constructor(mask: string | RegExp | RegExp[] | string[]) {
+export class LittleMaskSeparately {
+
+  private validators: Map<number[], RegExp[][]> = new Map<number[], RegExp[][]>;
+
+  constructor(mask: ILittleMaskSeparately<TLtlPlainMask>) {
     if (!mask) return;
-    this.rules = this.rulesFromMask(mask);
-    this.maxLengthMask = Math.max(...this.rules.map((arr) => arr.length));
+    this.setValidators(mask);
   }
 
-   // TODO
+  validValue(fullString: string,): boolean {
+    // const dateMask = {
+    //   validators: {
+    //     0: [
+    //       [/0/, /[1-9]/],
+    //       [/1/, /[0-9]/],
+    //       [/2/, /[0-9]/],
+    //       [/3/, /[0-1]/],
+    //     ],
+    //     1: [
+    //       [/0/, /[1-9]/],
+    //       [/1/, /[0-2]/]
+    //     ],
+    //     2: [
+    //       [/\d/, /\d/, /\d/, /\d/]
+    //     ]
+    //   }, mask: '0-1-2'
+
+    // };
+    return this.validSymbolDateMask(fullString, this.validators)
+    // } 
+
+  }
+
+  // private validSymbolDateMak(rule: RegExp[][], index: number, symbol: string, mask: string): boolean {
+  //   for (let j = 0; j < rule.length; j++) {
+  //     const currentRule = rule[j][index];
+  //     if (currentRule && currentRule.test(symbol) ? true : mask[index] === symbol)
+  //       return true;
+  //   }
+  //   return false;
+  // }
+
+
+
+  private validSymbolDateMask(fullString: string, validators: Map<number[], RegExp[][]>): boolean {
+    for (let index = 0; index < fullString.length; index++) {
+      const currentValidatorKey = Array.from(validators.keys()).find(elem => elem.includes(index))
+      if (!currentValidatorKey) return false;
+      let subString = '';
+      let currentIndexForMask = 0;
+      iteratorForSubstring: for (let j of currentValidatorKey) {
+        if (fullString[j]) {
+          subString += fullString[j];
+          currentIndexForMask = j;
+        } else {
+          currentIndexForMask = j;
+          break iteratorForSubstring;
+        }
+      }
+      index = currentIndexForMask;
+      const currentValidator = validators.get(currentValidatorKey);
+      if (!this.validValueXZ({ rules: currentValidator ?? [], maxLengthMask: currentValidator?.[0].length || 0 }, subString)) {
+        return false;
+      }
+    }
+    return true;
+
+  }
+
+  // TODO
   // if (i === this.littleMask.usedMaskIndex) continue;
   // const curElement = this.littleMask.rules[i][selectionStart];
   // if (curElement && curElement.test(e.data as string)) {
-  validValue(fullString: string): boolean {
-    if (!this.rules) true;
-    if (fullString.length > this.maxLengthMask) return false;
-    iteratorForRules: for (let i = 0; i < this.rules.length; i++) {
+  private validValueXZ(rules: ILittleMask, fullString: string): boolean {
+    if (!rules) true;
+    if (fullString.length > rules.maxLengthMask) return false;
+    iteratorForRules: for (let i = 0; i < rules.rules.length; i++) {
       for (let j = 0; j < fullString.length; j++) {
-        if (!this.validSymbol(this.rules[i], j, fullString[j])) {
+        if (!this.validSymbol(rules.rules[i], j, fullString[j])) {
           continue iteratorForRules;
         }
       }
-      this.usedMaskIndex = i;
+      rules.usedMaskIndex = i;
       return true;
     }
     return false;
   }
-validSymbol(rule: RegExp[], index: number, symbol: string): boolean {
+
+  private validSymbol(rule: RegExp[], index: number, symbol: string): boolean {
     return rule[index] && rule[index].test(symbol);
   }
+
+  // TODO надо ли
+  //  getValidatorsGroup(index: number, mask: { validators: { [key: string]: RegExp[][] }, mask: string }): RegExp[][] {
+  //   const map1: Map<number[], RegExp[][]> = new Map();
+  //   Object.entries(mask.validators).forEach((value: [string, RegExp[][]]) => { map1.set(this.getIndexes(value[0], mask.mask), value[1]) });
+  //   const entry = Array.from(map1.entries()).find(elem => elem[0].includes(index));
+  //   return entry ? entry[1] : [];
+  // }
+
+  // getIndexes(key: string, mask: string): number[] {
+  //   const indexes = [];
+  //   for (let i = 0; i < mask.length; i++) {
+  //     if (mask[i] === key) {
+  //       indexes.push(i);
+  //     }
+  //   }
+  //   return indexes;
+  // }
   /**
    * Возвращает правила из маски
    * @param mask - изначально переданная маска
    * @returns Набор правил
    */
-  private rulesFromMask(mask: string | RegExp | RegExp[] | string[]): RegExp[][] {
-    // если маска - массив масок
-    if (Array.isArray(mask)) {
-      const rules: RegExp[][] = [];
-      mask.forEach((mask) => rules.push(...this.maskToRules(mask)));
-      return rules;
+  private rulesFromValidators(validator: TLtlPlainMask): RegExp[][] {
+    let rules: RegExp[][] = [];
+    if (Array.isArray(validator)) {
+      validator.forEach((mask) => rules.push(...this.maskToRules(mask)));
+    } else {
+      rules = this.maskToRules(validator);
     }
-    // если маска одна
-    return this.maskToRules(mask as RegExp);
+    return rules;
   }
+
   /**
    * Самый важный метод! Переделывает regex в rules
    * @param maskRegex - маска
@@ -61,7 +136,7 @@ validSymbol(rule: RegExp[], index: number, symbol: string): boolean {
   private maskToRules(initialMask: RegExp | string): RegExp[][] {
     let rules: RegExp[][] = [[]];
     const isString = typeof initialMask === 'string';
-    
+
     const mask = isString ? initialMask : initialMask.source;
     // номер символа, для которого определяем правило
     let regular: string = '';
@@ -237,5 +312,52 @@ validSymbol(rule: RegExp[], index: number, symbol: string): boolean {
     rules.forEach((rule) => {
       rule.push(value);
     });
+  }
+
+  private setValidators(dateMask: ILittleMaskSeparately<TLtlPlainMask>) {
+    let currentIndexForMask = 0;
+    for (let i = 0; i < dateMask.mask.length; i++) {
+      const currentValidator = dateMask.validators[dateMask.mask[i]];
+      if (!currentValidator) {
+        // TODO придумать что-тол поумнее чем new RegExp(`\\${dateMask.mask[i]}`), это чтобы символы не воспринимались как спец символы
+        this.validators.set([currentIndexForMask], [[new RegExp(`\\${dateMask.mask[i]}`)]]);
+        currentIndexForMask++;
+      }
+      else {
+        let rules: RegExp[][] = this.rulesFromValidators(currentValidator);
+        const indexesArray = this.getIndexesArray(rules, currentIndexForMask);
+        this.validators.set(indexesArray, rules);
+        currentIndexForMask = (indexesArray.at(-1) || i) + 1;
+
+      }
+    };
+  }
+
+  private getIndexesArray(currentValidator: RegExp[][], index: number): number[] {
+    const maxLength = currentValidator[0].length;
+    const indexesArray = [];
+    for (let j = index; j < index + maxLength; j++) {
+      indexesArray.push(j)
+    }
+    return indexesArray;
+  }
+
+  private blyatFunc(dateMask: { validators: { [key: string]: RegExp[][] }, mask: string }): Map<number[], RegExp[][]> {
+    const map1: Map<number[], RegExp[][]> = new Map();
+    let currentIndexForMask = 0;
+    for (let i = 0; i < dateMask.mask.length; i++) {
+      const currentValidator = dateMask.validators[dateMask.mask[i]];
+      if (!currentValidator) {
+        map1.set([currentIndexForMask], [[new RegExp(dateMask.mask[i])]]);
+        currentIndexForMask++;
+      }
+      else {
+        const indexesArray = this.getIndexesArray(currentValidator, currentIndexForMask);
+        map1.set(indexesArray, currentValidator);
+        currentIndexForMask = (indexesArray.at(-1) || i) + 1;
+
+      }
+    };
+    return map1;
   }
 }
