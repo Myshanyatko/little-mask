@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'lib-ltl-mask',
-  imports: [],
-  template: `
+    selector: 'lib-ltl-mask',
+    imports: [],
+    template: `
     <p>
       ltl-mask works!
     </p>
   `,
-  styles: ``
+    styles: '',
 })
 export class LtlMaskComponent {
 
