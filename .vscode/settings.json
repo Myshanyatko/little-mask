@@ -1,0 +1,35 @@
+{
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "prettier.singleAttributePerLine": true,
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "prettier.jsxSingleQuote": true,
+    "prettier.singleQuote": true,
+    "typescript.preferences.quoteStyle": "single",
+    "html.format.enable": false,
+    "eslint.format.enable": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "eslint.useFlatConfig": false,
+    "eslint.workingDirectories": [
+        ".eslintrc.json"
+    ],
+    "editor.minimap.enabled": false,
+    "workbench.settings.applyToAllProfiles": [
+        "prettier.singleAttributePerLine"
+    ],
+    "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "editor.unicodeHighlight.includeComments": false,
+     "eslint.codeActionsOnSave.rules": null,
+}
+
