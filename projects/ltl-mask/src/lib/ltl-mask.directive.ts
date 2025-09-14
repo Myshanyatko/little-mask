@@ -20,6 +20,7 @@ import { LittleMaskSeparately } from './rules-date';
 })
 export class LtlMaskDirective {
     mask = input.required<TLtlMaskInput>();
+    placeholder = input<string>();
     private littleMask!: LittleMaskSeparately | LittleMask;
     private inputElement = inject(ViewContainerRef);
 
@@ -34,16 +35,17 @@ export class LtlMaskDirective {
         });
     }
 
-    // private currentPosition = 0;
     @HostListener('beforeinput', ['$event'])
     onBeforeInput(e: InputEvent) {
-        console.log('before');
-
         this.inputEventHandling(e);
     }
 
     @HostListener('input', ['$event'])
     onInput(e: InputEvent) {
+        this.writeStaticSeparator(e);
+    }
+
+    private writeStaticSeparator(e: InputEvent) {
         const currentPosition: number | null = (<HTMLInputElement>e.currentTarget).selectionEnd;
         if (e.data && typeof currentPosition === 'number') {
             const symbolMaskNextPositionStatic = (this.littleMask as LittleMaskSeparately).nextSymbolSeparator(
@@ -56,10 +58,9 @@ export class LtlMaskDirective {
                 (this.inputElement.element.nativeElement as HTMLInputElement).value = newValue;
             }
         }
-        console.log(e);
     }
 
-    setWriteValueFn() {
+    private setWriteValueFn() {
         const accessor = inject(DefaultValueAccessor, {
             self: true,
             optional: true,
@@ -72,11 +73,11 @@ export class LtlMaskDirective {
         }
     }
 
-    newValue(value: string): string {
+    private newValue(value: string): string {
         return value && this.mask() ? (this.littleMask.validValue(value) ? value : '') : value;
     }
 
-    inputEventHandling(e: InputEvent) {
+    private inputEventHandling(e: InputEvent) {
         if (!this.littleMask) return;
         const target = e?.currentTarget as HTMLInputElement;
         const selectionStart = (<HTMLInputElement>e.currentTarget).selectionStart || 0;
@@ -89,7 +90,7 @@ export class LtlMaskDirective {
         }
     }
 
-    stop(e: InputEvent) {
+    private stop(e: InputEvent) {
         e.stopPropagation();
         e.preventDefault();
     }

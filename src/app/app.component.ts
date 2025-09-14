@@ -38,11 +38,12 @@ export class AppComponent {
     // mask = ['00', 'aa0']
 
     setModel() {
-        this.model = '24/24/1000s';
+        // this.model = '24/24/1000s';
+        this.model = '14.09.2025';
         this._cdr.detectChanges();
     }
 
     setControl() {
-        this.control.setValue('24/24/1000s');
+        this.control.setValue('14.09.2025');
     }
 }
